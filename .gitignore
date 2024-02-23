@@ -152,3 +152,4 @@ cython_debug/
 #.idea/
 
 local_settings.py
+/output/
