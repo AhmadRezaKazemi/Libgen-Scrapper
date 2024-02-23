@@ -2,6 +2,8 @@ import requests
 import argparse
 import json
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+import validators
 from database_manager import DatabaseManager
 import local_settings
 
@@ -31,19 +33,70 @@ def get_webpage_data(url):
 def download_book(urls):
     raise NotImplementedError("downloading books not implemented")
     # Todo: implement downloading book
-    return urls
+
+
+def urls_from_library_lol(url):
+    response = get_webpage_data(url)
+
+    if response is None:
+        print(f"could not load {url} for download links")
+        return None
+
+    try:
+        soup = BeautifulSoup(response.content, 'html.parser')
+    except Exception as e:
+        print(f'could not parse {response.url} with error: {e}')
+        return None
+
+    try:
+        all_urls = [item.find('a')['href'] for item in soup.find_all('h2')]
+
+        all_urls.extend([item.find('a')['href'] for item in soup.find_all('li')])
+
+        return all_urls
+    except Exception as e:
+        print(f'could not get download urls from {url} with error {e}')
+        return None
+
+
+def urls_from_libgen_li(url):
+    return [url]
+
+
+def fetch_book_download_urls(urls):
+    download_urls = []
+
+    for url in urls:
+        url_list = None
+        domain = urlparse(url).netloc
+        if domain == "library.lol":
+            url_list = urls_from_library_lol(url)
+        elif domain == 'libgen.li':
+            url_list = urls_from_libgen_li(url)
+
+        if url_list is not None:
+            download_urls.extend(url_list)
+
+    # remove duplicates
+    download_urls = sorted(set(download_urls))
+
+    for url in download_urls:
+        if not validators.url(url):
+            download_urls.remove(url)
+
+    return download_urls
 
 
 def book_urls(urls):
     if args.download_book:
-        return download_book(urls)
+        return download_book(fetch_book_download_urls(urls))
     else:
-        return urls
+        return fetch_book_download_urls(urls)
 
 
 def download_image(url):
     raise NotImplementedError("downloading image not implemented")
-    # Todo: implement downloading book
+    # Todo: implement downloading image
 
 
 def book_image(url):
@@ -80,13 +133,14 @@ def parse_detailed_url(url):
         print(f'could not parse {response.url} with error: {e}')
         return ""
 
-    all_urls = soup.find_all('table')[4]
+    all_urls = soup.find_all('table')[4].find_all('td')
 
-    urls = ""
+    urls = [item.find('a')['href'] for item in all_urls[0:2]]
+
     if args.download_book:
-        return download_book(urls)
+        return download_book(fetch_book_download_urls(urls))
     else:
-        return urls
+        return fetch_book_download_urls(urls)
 
 
 def parse_simple(soup):
@@ -147,7 +201,7 @@ def parse_detailed(soup):
             "Edition": fifth_row[3].text.strip(),
             "Language": sixth_row[1].text.strip(),
             "Pages": sixth_row[3].text.strip(),
-            "ISBN": seventh_row[1].text.strip(),
+            "ISBN": [item.strip() for item in seventh_row[1].text.strip().split(',')],
             "Time Added": eighth_row[1].text.strip(),
             "Time Modified": eighth_row[3].text.strip(),
             "Size": ninth_row[1].text.strip(),
