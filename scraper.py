@@ -2,22 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import validators
-from urllib.request import urlopen
-import urllib.parse
-from shutil import copyfileobj
 import threading
-import cgi
-import os
-import random
-import string
-import local_settings
 import time
 
 BASE_URL = "https://libgen.is/search.php?req={keyword}&open=0" \
            "&view={view_style}&res=100&phrase={mask_option}" \
            "&column={column}&page={page_number}"
 WEBSITE_PREFIX = "https://libgen.is/"
-BOOK_DEFAULT_NAME_SIZE = 10
 
 
 def get_webpage_data(url):
@@ -27,38 +18,6 @@ def get_webpage_data(url):
         return url_response
     except Exception as e:
         print(f'could not fetch {url}. error: {e}')
-        return None
-
-
-def generate_random_string(length):
-    letters = string.ascii_letters + string.digits
-    return ''.join(random.choice(letters) for _ in range(length))
-
-
-def save_file(url):
-    try:
-        remote_file = urlopen(url)
-        content_disposition = remote_file.info()['Content-Disposition']
-    except Exception as e:
-        return None
-
-    try:
-        if content_disposition is not None:
-            _, params = cgi.parse_header(content_disposition)
-            filename = params["filename"]
-        else:
-            filename = os.path.basename(urllib.parse.unquote(url))
-    except Exception as e:
-        filename = generate_random_string(BOOK_DEFAULT_NAME_SIZE)
-
-    os.makedirs(local_settings.PATH + output_name, exist_ok=True)
-
-    try:
-        file_path = os.path.join(local_settings.PATH + output_name, filename)
-        with open(file_path, 'wb') as f:
-            copyfileobj(remote_file, f)
-        return file_path
-    except Exception as e:
         return None
 
 
@@ -263,11 +222,9 @@ def parse_url(response):
         return parse_simple(soup)
 
 
-def generate_url(cli_args, output):
+def generate_url(cli_args):
     global args
-    global output_name
     args = cli_args
-    output_name = output
     page_index = 1
 
     request_url = BASE_URL.format(
