@@ -71,8 +71,48 @@ def generate_output(books):
     return
 
 
+def check_generate_output():
+    old_query = database_manager.check_old_queries(cli_args.keywords, cli_args.detailed)
+
+    if old_query is not None:
+        print('list of all the scrapped queries:')
+        data_already_scraped(list(old_query))
+    else:
+        print('query is not scrapped yet')
+        if input('if you want to scrap please enter y/Y: ').lower() == 'y':
+            scrap_data()
+
+
+def scrap_data():
+    try:
+        books = generate_url(cli_args)
+
+        if len(books) == 0:
+            print('an error has occurred!')
+            return
+
+        print('scraped data!')
+
+        if cli_args.detailed:
+            ids = database_manager.insert_detailed_books(cli_args.keywords, remove_duplicate_books(books))
+        else:
+            ids = database_manager.insert_simple_books(cli_args.keywords, remove_duplicate_books(books))
+
+        if ids is None:
+            print('no new books added to database')
+        else:
+            generate_output(
+                database_manager.get_books(
+                    ids,
+                    cli_args.detailed
+                )
+            )
+
+    except Exception as error:
+        print('Error:', error)
+
+
 def data_already_scraped(old_query):
-    print('this query is already scraped in the following dates:')
     for i in range(len(old_query)):
         print(f'{i+1}- {old_query[i]["scrapingDate"]}')
     print('enter desired index to get the query result')
@@ -98,43 +138,12 @@ def data_already_scraped(old_query):
         return
 
 
-def scrap_data():
-    try:
-        books = generate_url(cli_args)
-
-        if len(books) == 0:
-            print('an error has occurred!')
-            return
-
-        print('scraped data!')
-
-        # for book in books:
-        #     print(json.dumps(book, indent=4))
-
-        if cli_args.detailed:
-            ids = database_manager.insert_detailed_books(cli_args.keywords, remove_duplicate_books(books))
-        else:
-            ids = database_manager.insert_simple_books(cli_args.keywords, remove_duplicate_books(books))
-
-        if ids is None:
-            print('no new books added to database')
-        else:
-            generate_output(
-                database_manager.get_books(
-                    ids,
-                    cli_args.detailed
-                )
-            )
-
-    except Exception as error:
-        print('Error:', error)
-
-
 def check_scrap_data():
     try:
         old_query = database_manager.check_old_queries(cli_args.keywords, cli_args.detailed)
 
         if old_query is not None:
+            print('this query is already scraped in the following dates:')
             data_already_scraped(list(old_query))
             return
 
@@ -147,6 +156,6 @@ def check_scrap_data():
 if __name__ == "__main__":
     cli_args = arg_parser()
     if cli_args.output:
-        generate_output()
+        check_generate_output()
     else:
         check_scrap_data()

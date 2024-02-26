@@ -58,6 +58,7 @@ class DatabaseManager:
                 if existing_books_count == 0:
                     inserted_id.append(collection.insert_one(book).inserted_id)
                 else:
+                    # Todo: update old book in database / add new book but with creation date? not sure
                     inserted_id.extend(
                         [book['_id']
                          for book in
