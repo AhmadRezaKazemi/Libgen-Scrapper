@@ -34,9 +34,9 @@ def urls_from_library_lol(url):
         return None
 
     try:
-        all_urls = [item.find('a')['href'] for item in soup.find_all('h2')]
+        all_urls = [item.find('a')['href'] for item in soup.find_all('h2') if item.find('a')]
 
-        all_urls.extend([item.find('a')['href'] for item in soup.find_all('li')])
+        all_urls.extend([item.find('a')['href'] for item in soup.find_all('li') if item.find('a')])
 
         return all_urls
     except Exception as e:
