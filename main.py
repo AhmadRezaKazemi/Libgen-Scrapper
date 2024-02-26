@@ -1,8 +1,9 @@
 import argparse
-from scraper import generate_url, save_file
+from scraper import generate_url
 import json
 from database_manager import DatabaseManager
 import local_settings
+from datetime import date
 
 
 database_manager = DatabaseManager(
@@ -37,9 +38,9 @@ def arg_parser():
 if __name__ == "__main__":
     cli_args = arg_parser()
     try:
-        books = generate_url(cli_args)
+        output = cli_args.keywords.replace(" ", "-") + '_' + str(date.today())
 
-        for book in books:
+        for book in generate_url(cli_args, output):
             print(json.dumps(book, indent=4))
 
         # Todo: save data in database
