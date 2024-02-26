@@ -6,11 +6,11 @@ import local_settings
 from datetime import date
 
 
-database_manager = DatabaseManager(
-    database_name=local_settings.DATABASE['name'],
-    host=local_settings.DATABASE['host'],
-    port=local_settings.DATABASE['port'],
-)
+# database_manager = DatabaseManager(
+#     database_name=local_settings.DATABASE['name'],
+#     host=local_settings.DATABASE['host'],
+#     port=local_settings.DATABASE['port'],
+# )
 
 
 def arg_parser():
@@ -31,6 +31,7 @@ def arg_parser():
         default="def")
     parser.add_argument("-m", "--mask_option", help="search for close words too", action="store_true")
     parser.add_argument("-db", "--download_book", help="download book instead of saving url", action="store_true")
+    parser.add_argument("-to", "--timeout", help="webpage request timeout, default: 3", default=3, type=int)
 
     return parser.parse_args()
 
@@ -38,9 +39,9 @@ def arg_parser():
 if __name__ == "__main__":
     cli_args = arg_parser()
     try:
-        output = cli_args.keywords.replace(" ", "-") + '_' + str(date.today())
+        # output = cli_args.keywords.replace(" ", "-") + '_' + str(date.today())
 
-        for book in generate_url(cli_args, output):
+        for book in generate_url(cli_args):
             print(json.dumps(book, indent=4))
 
         # Todo: save data in database
