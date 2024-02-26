@@ -1,9 +1,8 @@
 import argparse
 from scraper import generate_url
-import json
+from output_manager import generate_output
 from database_manager import DatabaseManager
 import local_settings
-from datetime import date
 
 
 database_manager = DatabaseManager(
@@ -65,12 +64,6 @@ def remove_duplicate_books(books):
     return unique_books
 
 
-def generate_output(books):
-    # output = cli_args.keywords.replace(" ", "-") + '_' + str(date.today())
-    print('we need an output')
-    return
-
-
 def check_generate_output():
     old_query = database_manager.check_old_queries(cli_args.keywords, cli_args.detailed)
 
@@ -105,7 +98,9 @@ def scrap_data():
                 database_manager.get_books(
                     ids,
                     cli_args.detailed
-                )
+                ),
+                cli_args.keywords,
+                cli_args.output_format
             )
 
     except Exception as error:
@@ -126,7 +121,9 @@ def data_already_scraped(old_query):
                 database_manager.get_books(
                     old_query[entered_index - 1]['books'],
                     cli_args.detailed
-                )
+                ),
+                cli_args.keywords,
+                cli_args.output_format
             )
         elif entered_index == -1:
             scrap_data()

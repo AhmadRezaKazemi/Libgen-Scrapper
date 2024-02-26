@@ -40,3 +40,10 @@ def save_file(url, output_name):
         return file_path
     except Exception as e:
         return None
+
+
+def generate_output(books, keywords, output_format):
+    # output = keywords.replace(" ", "-") + '_' + str(date.today())
+    # Todo: create output
+    print('we need an output')
+    return
