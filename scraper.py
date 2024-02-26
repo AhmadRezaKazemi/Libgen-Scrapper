@@ -233,6 +233,8 @@ def generate_url(cli_args):
     books = []
 
     while response is not None:
+        print(f'scraping page {page_index}')
+
         results = parse_url(response)
 
         # webpage would not raise 404, instead there is no content
