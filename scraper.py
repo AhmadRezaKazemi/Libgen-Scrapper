@@ -253,6 +253,7 @@ def generate_url(cli_args):
             page_number=page_index,
         )
 
+        #  Todo: try multiple times
         response = get_webpage_data(request_url)
 
     print(f'reached end of pages. last page was {page_index-1}')
