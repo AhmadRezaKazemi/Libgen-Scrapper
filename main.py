@@ -100,7 +100,9 @@ def scrap_data():
                     cli_args.detailed
                 ),
                 cli_args.keywords,
-                cli_args.output_format
+                cli_args.output_format,
+                cli_args.detailed,
+                cli_args.download_book
             )
 
     except Exception as error:
@@ -123,7 +125,9 @@ def data_already_scraped(old_query):
                     cli_args.detailed
                 ),
                 cli_args.keywords,
-                cli_args.output_format
+                cli_args.output_format,
+                cli_args.detailed,
+                cli_args.download_book
             )
         elif entered_index == -1:
             scrap_data()

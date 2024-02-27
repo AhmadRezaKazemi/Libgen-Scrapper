@@ -11,6 +11,8 @@ import string
 import json
 import xml.etree.ElementTree as eT
 import csv
+import zipfile
+import shutil
 
 BOOK_DEFAULT_NAME_SIZE = 10
 
@@ -48,7 +50,10 @@ def save_file(url, output_name):
         return None
 
 
-def download_media(books):
+def download_media(books, is_detailed):
+    if is_detailed:
+        print('download book covers')
+
     return
 
 
@@ -100,23 +105,51 @@ def csv_output(books, path):
         writer.writerows(books)
 
 
-def compress_output(path):
-    return
+def compress_output(folder_path, zip_path):
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, os.path.relpath(file_path, folder_path))
 
 
-def generate_output(books, keywords, output_format):
-    output = keywords.replace(" ", "-") + '_' + str(date.today())
+def generate_output(books, keywords, output_format, is_detailed, should_download_media):
+    file_output = local_settings.PATH + keywords.replace(" ", "-") + '_' + str(date.today())
 
     book_list = []
-    for inner_cursor in books:
-        for book in inner_cursor:
-            book_list.append(book)
+    try:
+        for inner_cursor in books:
+            for book in inner_cursor:
+                book_list.append(book)
+    except Exception as e:
+        print('could not turn books into a list. error:', e)
 
-    if output_format == 'json':
-        json_output(book_list, local_settings.PATH + output + '.json')
-    elif output_format == 'xml':
-        xml_output(book_list, local_settings.PATH + output + '.xml')
-    elif output_format == 'csv':
-        csv_output(book_list, local_settings.PATH + output + '.csv')
-    else:
-        print('output not supported!')
+    try:
+        if should_download_media:
+            download_media(book_list, is_detailed)
+    except Exception as e:
+        print('could not download media. error:', e)
+
+    try:
+        if not os.path.exists(file_output):
+            os.makedirs(file_output, exist_ok=True)
+
+        if output_format == 'json':
+            json_output(book_list, file_output + '\\report.json')
+        elif output_format == 'xml':
+            xml_output(book_list, file_output + '\\report.xml')
+        elif output_format == 'csv':
+            csv_output(book_list, file_output + '\\report.csv')
+        else:
+            print('output not supported!')
+    except Exception as e:
+        print('could not create output. error:', e)
+        return
+
+    try:
+        compress_output(file_output, file_output + '.zip')
+        shutil.rmtree(file_output)
+        print('data ready at:')
+        print(file_output + '.zip')
+    except Exception as e:
+        print('could not compress folder. error:', e)
