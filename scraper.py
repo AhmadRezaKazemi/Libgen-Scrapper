@@ -232,6 +232,7 @@ def scrap_url(cli_args):
 
     books = []
 
+    # Todo: make percentage progress per each book
     while response is not None:
         print(f'scraping page {page_index}')
 

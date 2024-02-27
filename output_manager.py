@@ -52,6 +52,7 @@ def save_file(url, output_name, default_file_name):
 
 
 def download_media(books, path):
+    # Todo: make percentage progress per each book
     for book in books:
         if "Image URL" in book:
             image_name = save_file(book["Image URL"], path + '\\media\\image\\', book["Title"])
