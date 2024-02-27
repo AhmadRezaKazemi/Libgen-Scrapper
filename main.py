@@ -1,5 +1,5 @@
 import argparse
-from scraper import generate_url
+from scraper import scrap_url
 from output_manager import generate_output
 from database_manager import DatabaseManager
 import local_settings
@@ -78,7 +78,7 @@ def check_generate_output():
 
 def scrap_data():
     try:
-        books = generate_url(cli_args)
+        books = scrap_url(cli_args)
 
         if len(books) == 0:
             print('an error has occurred!')
@@ -96,13 +96,12 @@ def scrap_data():
         else:
             generate_output(
                 database_manager.get_books(
-                    ids,
+                    ids[0],
                     cli_args.detailed
                 ),
                 cli_args.keywords,
                 cli_args.output_format,
-                cli_args.detailed,
-                cli_args.download_book
+                cli_args.download_book,
             )
 
     except Exception as error:
@@ -126,8 +125,7 @@ def data_already_scraped(old_query):
                 ),
                 cli_args.keywords,
                 cli_args.output_format,
-                cli_args.detailed,
-                cli_args.download_book
+                cli_args.download_book,
             )
         elif entered_index == -1:
             scrap_data()

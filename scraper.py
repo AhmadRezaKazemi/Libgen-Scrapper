@@ -211,7 +211,7 @@ def parse_url(response):
         return parse_simple(soup)
 
 
-def generate_url(cli_args):
+def scrap_url(cli_args):
     global args
     args = cli_args
     page_index = 1
@@ -253,8 +253,12 @@ def generate_url(cli_args):
             page_number=page_index,
         )
 
-        #  Todo: try multiple times
-        response = get_webpage_data(request_url)
+        # try multiple times
+        for i in range(3):
+            response = get_webpage_data(request_url)
+
+            if response is not None:
+                break
 
     print(f'reached end of pages. last page was {page_index-1}')
 

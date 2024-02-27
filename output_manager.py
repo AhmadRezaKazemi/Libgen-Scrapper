@@ -17,13 +17,14 @@ import shutil
 BOOK_DEFAULT_NAME_SIZE = 10
 
 
-def generate_random_string(length):
-    letters = string.ascii_letters + string.digits
-    return ''.join(random.choice(letters) for _ in range(length))
+class MongoEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
 
-def save_file(url, output_name):
-    # Todo: add command to download books
+def save_file(url, output_name, default_file_name):
     try:
         remote_file = urlopen(url)
         content_disposition = remote_file.info()['Content-Disposition']
@@ -37,31 +38,39 @@ def save_file(url, output_name):
         else:
             filename = os.path.basename(urllib.parse.unquote(url))
     except Exception as e:
-        filename = generate_random_string(BOOK_DEFAULT_NAME_SIZE)
+        filename = default_file_name
 
-    os.makedirs(local_settings.PATH + output_name, exist_ok=True)
+    os.makedirs(output_name, exist_ok=True)
 
     try:
-        file_path = os.path.join(local_settings.PATH + output_name, filename)
+        file_path = os.path.join(output_name, filename)
         with open(file_path, 'wb') as f:
             copyfileobj(remote_file, f)
-        return file_path
+        return filename
     except Exception as e:
         return None
 
 
-def download_media(books, is_detailed):
-    if is_detailed:
-        print('download book covers')
+def download_media(books, path):
+    for book in books:
+        if "Image URL" in book:
+            image_name = save_file(book["Image URL"], path + '\\media\\image\\', book["Title"])
+            if image_name is not None:
+                book["Image Path"] = '.\\media\\image\\' + image_name
+            else:
+                book["Image Path"] = None
 
-    return
+        book_name = None
+        for download_url in book["Download Links"]:
+            book_name = save_file(download_url, path + '\\media\\file\\', book["Title"])
 
+            if book_name is not None:
+                book["Book File"] = '.\\media\\file\\' + book_name
+                break
 
-class MongoEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
+        # if no file found for this book, set None as value
+        if book_name is None:
+            book["Book File"] = None
 
 
 def json_output(books, path):
@@ -113,7 +122,7 @@ def compress_output(folder_path, zip_path):
                 zipf.write(file_path, os.path.relpath(file_path, folder_path))
 
 
-def generate_output(books, keywords, output_format, is_detailed, should_download_media):
+def generate_output(books, keywords, output_format, should_download_media):
     file_output = local_settings.PATH + keywords.replace(" ", "-") + '_' + str(date.today())
 
     book_list = []
@@ -126,13 +135,12 @@ def generate_output(books, keywords, output_format, is_detailed, should_download
 
     try:
         if should_download_media:
-            download_media(book_list, is_detailed)
+            download_media(book_list, file_output)
     except Exception as e:
         print('could not download media. error:', e)
 
     try:
-        if not os.path.exists(file_output):
-            os.makedirs(file_output, exist_ok=True)
+        os.makedirs(file_output, exist_ok=True)
 
         if output_format == 'json':
             json_output(book_list, file_output + '\\report.json')
